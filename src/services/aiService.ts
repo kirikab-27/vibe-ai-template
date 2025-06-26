@@ -1,168 +1,352 @@
-import type { AIServiceConfig, AIAnalysisResult, AIServiceStatus } from '../types/ai';
+import type { AIAnalysisResult, AIServiceConfig, AIServiceStatus } from '../types/ai';
+import { claudeApiService } from './claudeApiService';
+import { fileSystemService } from './fileSystemService';
+import { knowledgeService } from './knowledgeService';
 
-export class AIService {
-  private isOnline = true;
-  private config: AIServiceConfig;
-  private healthCheckInterval?: number;
-  private errorCount = 0;
-  private successCount = 0;
-  private lastHealthCheck = Date.now();
+class AIService {
+  private config: AIServiceConfig = {
+    preferredModel: 'sonnet',
+    enableOfflineFallback: true,
+    timeout: 30000,
+    retryAttempts: 3
+  };
 
-  constructor(config: Partial<AIServiceConfig> = {}) {
-    this.config = {
-      timeout: 30000,
-      retryAttempts: 3,
-      preferredModel: 'sonnet',
-      enableOfflineFallback: true,
-      ...config
-    };
+  private status: AIServiceStatus = {
+    isOnline: false,
+    successCount: 0,
+    errorCount: 0,
+    lastHealthCheck: Date.now(),
+    config: this.config
+  };
+
+  constructor() {
+    this.initializeService();
+  }
+
+  private async initializeService() {
+    console.log('🤖 Initializing AI Service Phase 3...');
     
-    this.initHealthCheck();
+    // Claude API接続確認
+    await this.checkClaudeConnection();
+    
+    // File System capabilities確認
+    const fsCapabilities = fileSystemService.getCapabilities();
+    console.log('📁 File System capabilities:', fsCapabilities);
+    
+    // 定期的なヘルスチェック
+    this.startHealthCheck();
   }
 
-  private initHealthCheck() {
-    // Vite環境では開発サーバーのヘルスチェックのみ
-    this.healthCheckInterval = window.setInterval(async () => {
-      try {
-        this.lastHealthCheck = Date.now();
-        // 開発環境では常にオンラインとみなす
-        this.isOnline = true;
-      } catch {
-        this.isOnline = false;
-      }
-    }, 30000);
-  }
-
-  async analyzeCode(code: string, context?: string): Promise<AIAnalysisResult> {
+  private async checkClaudeConnection(): Promise<void> {
     try {
-      if (this.isOnline) {
-        return await this.claudeAnalyze(code, context);
+      if (claudeApiService.isConfigured()) {
+        const isHealthy = await claudeApiService.healthCheck();
+        this.status.isOnline = isHealthy;
+        
+        if (isHealthy) {
+          console.log('✅ Claude API connection established');
+          this.status.successCount++;
+        } else {
+          console.warn('⚠️ Claude API health check failed');
+          this.status.errorCount++;
+        }
+      } else {
+        console.warn('⚠️ Claude API not configured - using fallback mode');
+        this.status.isOnline = false;
       }
     } catch (error) {
-      console.warn('Claude analysis failed, falling back to local', error);
-      this.errorCount++;
-      this.isOnline = false;
+      console.error('❌ Claude API connection failed:', error);
+      this.status.isOnline = false;
+      this.status.errorCount++;
     }
     
-    if (this.config.enableOfflineFallback) {
-      return await this.localAnalyze(code, context);
+    this.status.lastHealthCheck = Date.now();
+  }
+
+  // APIキーの設定
+  setApiKey(apiKey: string): boolean {
+    const success = claudeApiService.setApiKey(apiKey);
+    if (success) {
+      this.checkClaudeConnection();
     }
+    return success;
+  }
+
+  // コード分析（Phase 3強化版）
+  async analyzeCode(code: string, context?: string): Promise<AIAnalysisResult | null> {
+    try {
+      // プロジェクトコンテキストを追加
+      const projectContext = await this.getProjectContext();
+      const fullContext = context ? `${context}\n\n${projectContext}` : projectContext;
+
+      // Claude APIを優先使用
+      if (claudeApiService.isConfigured()) {
+        const result = await claudeApiService.analyzeCode(code, fullContext);
+        if (result) {
+          this.status.successCount++;
+          
+          // 知識ベースに結果を記録（学習機能）
+          await this.recordAnalysisResult(code, result);
+          
+          return result;
+        }
+      }
+
+      // フォールバック: ローカル知識ベース + パターン分析
+      return await this.fallbackAnalysis(code, fullContext);
+      
+    } catch (error) {
+      console.error('AI analysis failed:', error);
+      this.status.errorCount++;
+      return null;
+    }
+  }
+
+  // チャット（Phase 3強化版）
+  async generateCode(message: string): Promise<string | null> {
+    try {
+      // プロジェクトコンテキストを追加
+      const projectContext = await this.getProjectContext();
+      
+      // Claude APIを優先使用
+      if (claudeApiService.isConfigured()) {
+        const response = await claudeApiService.chat(message, projectContext);
+        if (response) {
+          this.status.successCount++;
+          return response;
+        }
+      }
+
+      // フォールバック: 知識ベース検索 + 定型応答
+      return await this.fallbackChat(message);
+      
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      this.status.errorCount++;
+      return null;
+    }
+  }
+
+  // プロジェクトコンテキストの取得（Phase 3新機能）
+  private async getProjectContext(): Promise<string> {
+    try {
+      // File Systemからプロジェクト構造を取得
+      const projectFiles = await fileSystemService.scanProjectStructure();
+      const stats = fileSystemService.calculateProjectStats(projectFiles);
+      
+      // 現在のファイル情報
+      const fsStatus = fileSystemService.getStatus();
+      
+      const context = `
+## プロジェクト情報 (Phase 3)
+- ファイル数: ${stats.totalFiles}
+- 総サイズ: ${(stats.totalSize / 1024).toFixed(1)}KB
+- ファイルタイプ: ${Object.entries(stats.fileTypes).map(([ext, count]) => `${ext}(${count})`).join(', ')}
+- ディレクトリアクセス: ${fsStatus.hasDirectoryAccess ? '有効' : '無効'}
+- ファイル監視: ${fsStatus.isWatching ? '有効' : '無効'}
+
+## 最近のファイル
+${projectFiles.filter(f => f.type === 'file').slice(0, 10).map(f => `- ${f.path}`).join('\n')}
+      `.trim();
+
+      return context;
+    } catch (error) {
+      console.error('Failed to get project context:', error);
+      return 'プロジェクトコンテキストの取得に失敗しました';
+    }
+  }
+
+  // 分析結果の記録（学習機能）
+  private async recordAnalysisResult(code: string, result: AIAnalysisResult): Promise<void> {
+    try {
+      // 知識ベースに新しいパターンを追加
+      if (result.suggestions.length > 0) {
+        const existingPatterns = knowledgeService.search('pattern');
+        const isNewPattern = !existingPatterns.some(p => 
+          p.entry.content.includes(result.suggestions[0])
+        );
+
+        if (isNewPattern) {
+          knowledgeService.addEntry({
+            title: `コード改善パターン: ${new Date().toLocaleDateString()}`,
+            content: `
+## 分析されたコード
+\`\`\`typescript
+${code.slice(0, 200)}${code.length > 200 ? '...' : ''}
+\`\`\`
+
+## 検出された問題
+${result.potentialIssues.map(issue => `- ${issue}`).join('\n')}
+
+## 改善提案
+${result.suggestions.map(suggestion => `- ${suggestion}`).join('\n')}
+
+## 説明
+${result.explanation}
+            `,
+            tags: ['analysis', 'pattern', 'improvement'],
+            category: 'pattern'
+          });
+
+          console.log('📚 New pattern added to knowledge base');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to record analysis result:', error);
+    }
+  }
+
+  // フォールバック分析
+  private async fallbackAnalysis(code: string, context?: string): Promise<AIAnalysisResult> {
+    // 知識ベースから関連パターンを検索
+    const codeLanguage = this.detectLanguage(code);
+    const relatedKnowledge = knowledgeService.search(codeLanguage);
     
-    throw new Error('AI service unavailable and offline fallback disabled');
-  }
-
-  private async claudeAnalyze(code: string, context?: string): Promise<AIAnalysisResult> {
-    // 将来的にClaude Code SDKが利用可能になった場合の実装
-    // 現在は開発用のモック応答を返す
-    return this.createMockAnalysis(code, context, 'claude');
-  }
-
-  private async localAnalyze(code: string, context?: string): Promise<AIAnalysisResult> {
-    return this.createMockAnalysis(code, context, 'local_knowledge');
-  }
-
-  private async createMockAnalysis(
-    code: string, 
-    context?: string, 
-    source: 'claude' | 'local_knowledge' = 'local_knowledge'
-  ): Promise<AIAnalysisResult> {
-    // 実際のコード分析ロジック
+    // 基本的なコード分析
+    const lines = code.split('\n').length;
+    const hasTypes = code.includes(': ') || code.includes('interface ');
+    const hasComments = code.includes('//') || code.includes('/*');
+    const complexity = this.calculateComplexity(code);
+    
+    let quality: 'high' | 'medium' | 'low' = 'medium';
+    const issues: string[] = [];
     const suggestions: string[] = [];
-    const potentialIssues: string[] = [];
 
-    // TypeScript関連のチェック
-    if (code.includes('any')) {
-      potentialIssues.push('TypeScriptの`any`型が使用されています。より具体的な型を使用することを検討してください。');
+    // 品質判定
+    if (complexity < 5 && hasTypes && hasComments) {
+      quality = 'high';
+    } else if (complexity > 15 || (!hasTypes && codeLanguage === 'typescript')) {
+      quality = 'low';
     }
 
-    if (code.includes('console.log')) {
-      suggestions.push('デバッグ用のconsole.logが残っています。本番環境では削除を検討してください。');
+    // 問題検出
+    if (!hasTypes && codeLanguage === 'typescript') {
+      issues.push('TypeScript型注釈が不足しています');
+      suggestions.push('適切な型定義を追加してください');
     }
-
-    // React関連のチェック
-    if (code.includes('useEffect') && !code.includes('[]')) {
-      potentialIssues.push('useEffectに依存配列が設定されていない可能性があります。無限ループを避けるため確認してください。');
-    }
-
-    if (code.includes('useState') && code.includes('state')) {
-      suggestions.push('stateの命名がより具体的になるよう検討してください。');
-    }
-
-    // パフォーマンス関連
-    if (code.includes('map') && code.includes('filter')) {
-      suggestions.push('mapとfilterの連続使用があります。パフォーマンスを考慮してreduce等への変更を検討してください。');
-    }
-
-    // セキュリティ関連
-    if (code.includes('innerHTML')) {
-      potentialIssues.push('innerHTMLの使用は XSS脆弱性のリスクがあります。より安全な方法を検討してください。');
-    }
-
-    // コード品質の評価
-    let codeQuality: 'high' | 'medium' | 'low' = 'high';
-    if (potentialIssues.length > 2) {
-      codeQuality = 'low';
-    } else if (potentialIssues.length > 0) {
-      codeQuality = 'medium';
-    }
-
-    const confidence = source === 'claude' ? 'high' : 'medium';
-
-    this.successCount++;
-
-    return {
-      suggestions,
-      potentialIssues,
-      codeQuality,
-      source,
-      confidence,
-      timestamp: Date.now(),
-      explanation: `コードを分析しました。${potentialIssues.length}個の潜在的な問題と${suggestions.length}個の改善提案が見つかりました。${context ? `コンテキスト「${context}」を考慮しています。` : ''}`
-    };
-  }
-
-  async generateCode(prompt: string): Promise<string> {
-    // 開発用のモック実装
-    this.successCount++;
     
-    return `// ${prompt}に基づいて生成されたコード
-// 注意: これは開発用のモック実装です
+    if (!hasComments && lines > 10) {
+      issues.push('コメントが不足しています');
+      suggestions.push('コードの意図を説明するコメントを追加してください');
+    }
+    
+    if (complexity > 10) {
+      issues.push('関数が複雑すぎます');
+      suggestions.push('関数を小さく分割することを検討してください');
+    }
 
-interface GeneratedInterface {
-  id: string;
-  name: string;
-  createdAt: Date;
-}
+    // 知識ベースからの提案
+    if (relatedKnowledge.length > 0) {
+      suggestions.push(`関連パターン: ${relatedKnowledge[0].entry.title} を参照してください`);
+    }
 
-export function generatedFunction(): GeneratedInterface {
-  return {
-    id: '${Math.random().toString(36).substr(2, 9)}',
-    name: 'Generated Item',
-    createdAt: new Date()
-  };
-}
-
-// TODO: 実際のClaude Code SDKによる実装に置き換える`;
-  }
-
-  getStatus(): AIServiceStatus {
     return {
-      isOnline: this.isOnline,
-      lastHealthCheck: this.lastHealthCheck,
-      config: this.config,
-      errorCount: this.errorCount,
-      successCount: this.successCount
+      codeQuality: quality,
+      potentialIssues: issues,
+      suggestions,
+      explanation: `フォールバック分析による結果。複雑度: ${complexity}, 行数: ${lines}`,
+      confidence: 0.7,
+      source: 'fallback',
+      timestamp: Date.now()
     };
   }
 
-  updateConfig(newConfig: Partial<AIServiceConfig>) {
-    this.config = { ...this.config, ...newConfig };
+  // フォールバックチャット
+  private async fallbackChat(message: string): Promise<string> {
+    // 知識ベースから関連情報を検索
+    const searchResults = knowledgeService.search(message);
+    
+    if (searchResults.length > 0) {
+      const bestMatch = searchResults[0];
+      return `知識ベースから関連情報を見つけました:\n\n**${bestMatch.entry.title}**\n\n${bestMatch.entry.content.slice(0, 300)}...\n\n詳細は知識タブでご確認ください。`;
+    }
+
+    // 基本的な応答
+    const responses = [
+      'Claude APIが利用できません。APIキーを設定すると、より詳細な回答が可能になります。',
+      'オフラインモードです。知識ベースから関連情報を検索しましたが、該当する情報が見つかりませんでした。',
+      'より具体的な質問をしていただけると、知識ベースから適切な情報をお探しできます。'
+    ];
+
+    return responses[Math.floor(Math.random() * responses.length)] + `\n\nご質問: "${message}"`;
   }
 
-  destroy() {
-    if (this.healthCheckInterval) {
-      window.clearInterval(this.healthCheckInterval);
+  // 言語検出
+  private detectLanguage(code: string): string {
+    if (code.includes('interface ') || code.includes(': ')) return 'typescript';
+    if (code.includes('useState') || code.includes('useEffect')) return 'react';
+    if (code.includes('function ') || code.includes('const ')) return 'javascript';
+    return 'unknown';
+  }
+
+  // 複雑度計算
+  private calculateComplexity(code: string): number {
+    let complexity = 1;
+    
+    const patterns = [
+      /if\s*\(/g,
+      /for\s*\(/g,
+      /while\s*\(/g,
+      /switch\s*\(/g,
+      /catch\s*\(/g,
+      /\?\s*.*?\s*:/g, // ternary operator
+    ];
+
+    patterns.forEach(pattern => {
+      const matches = code.match(pattern);
+      if (matches) complexity += matches.length;
+    });
+
+    return complexity;
+  }
+
+  // 定期ヘルスチェック
+  private startHealthCheck(): void {
+    setInterval(async () => {
+      await this.checkClaudeConnection();
+    }, 60000); // 1分ごと
+  }
+
+  // 設定更新
+  updateConfig(config: Partial<AIServiceConfig>): void {
+    this.config = { ...this.config, ...config };
+    
+    if (config.preferredModel) {
+      claudeApiService.updateConfig({ model: config.preferredModel as any });
     }
+  }
+
+  // ステータス取得
+  getStatus(): AIServiceStatus {
+    return { ...this.status };
+  }
+
+  // ヘルスチェック
+  async healthCheck(): Promise<boolean> {
+    await this.checkClaudeConnection();
+    return this.status.isOnline;
+  }
+
+  // Phase 2互換性のための古いメソッド
+  get isOnline(): boolean {
+    return this.status.isOnline;
+  }
+
+  get isLoading(): boolean {
+    return false; // Phase 3では個別の操作でローディング状態を管理
+  }
+
+  get error(): string | null {
+    return this.status.errorCount > 0 ? 'APIエラーが発生しています' : null;
+  }
+
+  // 使用統計
+  getUsageStats() {
+    return {
+      aiService: this.status,
+      claudeApi: claudeApiService.getUsageStats(),
+      fileSystem: fileSystemService.getStatus(),
+    };
   }
 }
 

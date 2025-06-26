@@ -8,13 +8,13 @@ export interface AIServiceConfig {
 }
 
 export interface AIAnalysisResult {
-  suggestions: string[];
-  potentialIssues: string[];
   codeQuality: 'high' | 'medium' | 'low';
-  source: 'claude' | 'local_knowledge';
-  confidence: 'high' | 'medium' | 'low';
-  timestamp: number;
+  potentialIssues: string[];
+  suggestions: string[];
   explanation?: string;
+  confidence: number;
+  source: 'claude' | 'local_knowledge' | 'fallback';
+  timestamp: number;
 }
 
 export interface ChatMessage {
