@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, AlertTriangle, Lightbulb, CheckCircle, Loader } from 'lucide-react';
 import { useAIService } from '../../hooks/ai/useAIService';
@@ -8,7 +8,7 @@ interface CodeAnalyzerProps {
   isOnline: boolean;
 }
 
-export function CodeAnalyzer({ isOnline }: CodeAnalyzerProps) {
+export function CodeAnalyzer({ isOnline: _ }: CodeAnalyzerProps) {
   const [code, setCode] = useState('');
   const [context, setContext] = useState('');
   const [result, setResult] = useState<AIAnalysisResult | null>(null);
@@ -52,6 +52,7 @@ export function CodeAnalyzer({ isOnline }: CodeAnalyzerProps) {
             onChange={(e) => setCode(e.target.value)}
             placeholder="TypeScript/JavaScriptコードを入力してください..."
             className="w-full h-32 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
+            data-analyzer-input
           />
         </div>
 

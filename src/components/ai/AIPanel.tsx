@@ -1,24 +1,47 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Code, MessageSquare, Settings, Zap } from 'lucide-react';
+import { X, Code, MessageSquare, Settings, Zap, BookOpen } from 'lucide-react';
 import { CodeAnalyzer } from './CodeAnalyzer';
 import { ChatInterface } from './ChatInterface';
 import { AISettings } from './AISettings';
+import { KnowledgeBase } from './KnowledgeBase';
+import type { FileContext } from '../../hooks/ai/useFileContext';
 
 interface AIPanelProps {
   isOpen: boolean;
   onClose: () => void;
   isOnline: boolean;
+  activeTab?: 'chat' | 'analyze' | 'knowledge' | 'settings';
+  onTabChange?: (tab: 'chat' | 'analyze' | 'knowledge' | 'settings') => void;
+  fileContext?: FileContext;
 }
 
-type TabType = 'chat' | 'analyze' | 'settings';
+type TabType = 'chat' | 'analyze' | 'knowledge' | 'settings';
 
-export function AIPanel({ isOpen, onClose, isOnline }: AIPanelProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('chat');
+export function AIPanel({ 
+  isOpen, 
+  onClose, 
+  isOnline, 
+  activeTab: externalActiveTab,
+  onTabChange,
+  fileContext 
+}: AIPanelProps) {
+  const [internalActiveTab, setInternalActiveTab] = useState<TabType>('chat');
+  
+  // 外部制御と内部制御を統合
+  const activeTab = externalActiveTab || internalActiveTab;
+  const setActiveTab = (tab: TabType) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    } else {
+      setInternalActiveTab(tab);
+    }
+  };
 
   const tabs = [
     { id: 'chat', label: 'チャット', icon: MessageSquare },
     { id: 'analyze', label: '分析', icon: Code },
+    { id: 'knowledge', label: '知識', icon: BookOpen },
     { id: 'settings', label: '設定', icon: Settings },
   ] as const;
 
@@ -42,6 +65,7 @@ export function AIPanel({ isOpen, onClose, isOnline }: AIPanelProps) {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            data-ai-panel
           >
             {/* ヘッダー */}
             <div className="flex items-center justify-between p-4 border-b bg-gray-50">
@@ -49,6 +73,11 @@ export function AIPanel({ isOpen, onClose, isOnline }: AIPanelProps) {
                 <Zap className="text-blue-600" size={20} />
                 <h3 className="font-semibold text-gray-900">AI Assistant</h3>
                 <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                {fileContext?.currentFile && (
+                  <div className="text-xs text-gray-500 ml-2 truncate max-w-32">
+                    📁 {fileContext.currentFile.split('/').pop()}
+                  </div>
+                )}
               </div>
               <button
                 onClick={onClose}
@@ -101,6 +130,7 @@ export function AIPanel({ isOpen, onClose, isOnline }: AIPanelProps) {
                 >
                   {activeTab === 'chat' && <ChatInterface isOnline={isOnline} />}
                   {activeTab === 'analyze' && <CodeAnalyzer isOnline={isOnline} />}
+                  {activeTab === 'knowledge' && <KnowledgeBase isOnline={isOnline} />}
                   {activeTab === 'settings' && <AISettings />}
                 </motion.div>
               </AnimatePresence>
@@ -112,7 +142,14 @@ export function AIPanel({ isOpen, onClose, isOnline }: AIPanelProps) {
                 <span>
                   {isOnline ? '🟢 Claude Code 接続中' : '🔴 オフラインモード'}
                 </span>
-                <span>v1.0.0</span>
+                <div className="flex items-center gap-2">
+                  {fileContext && (
+                    <span>
+                      {fileContext.workspaceStats.totalFiles}ファイル
+                    </span>
+                  )}
+                  <span>v2.0.0</span>
+                </div>
               </div>
             </div>
           </motion.div>

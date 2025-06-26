@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, RotateCcw, Info } from 'lucide-react';
 import { useAIService } from '../../hooks/ai/useAIService';
 import type { AISettings as AISettingsType } from '../../types/ai';
