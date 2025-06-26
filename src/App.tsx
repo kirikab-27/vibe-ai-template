@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { AIAssistant } from './components/ai/AIAssistant'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -9,9 +10,9 @@ function App() {
       padding: '2rem',
       textAlign: 'center'
     }}>
-      <h1>🚀 VIBE Coding Template</h1>
+      <h1>🚀 VIBE AI Integrated Template</h1>
       <p style={{ color: '#666', marginBottom: '2rem' }}>
-        AI開発用のプロジェクトテンプレートです
+        AI機能が統合された開発テンプレートです
       </p>
       
       <div style={{ marginBottom: '2rem' }}>
@@ -37,12 +38,12 @@ function App() {
         borderRadius: '8px',
         marginTop: '2rem'
       }}>
-        <h3>✨ 使い方</h3>
+        <h3>✨ AI機能の使い方</h3>
         <ol style={{ textAlign: 'left', maxWidth: '600px', margin: '0 auto' }}>
-          <li>このテンプレートをコピーして新しいプロジェクトを作成</li>
-          <li><code>.ai/context.md</code> でプロジェクト情報を更新</li>
-          <li><code>.ai/CLAUDE.md</code> の技術スタック情報を更新</li>
-          <li>Claude Codeを使って開発を開始！</li>
+          <li>右下のAIアシスタントボタンをクリック</li>
+          <li>チャットでコード生成や質問ができます</li>
+          <li>分析タブでコードの品質チェックが可能</li>
+          <li>設定タブでAIの動作をカスタマイズ</li>
         </ol>
       </div>
 
@@ -52,9 +53,28 @@ function App() {
         backgroundColor: '#e8f4fd',
         borderRadius: '8px'
       }}>
-        <p><strong>📚 参考:</strong></p>
-        <p>実装例として <code>markdown-memo-app</code> を参照してください</p>
+        <p><strong>🤖 AI機能:</strong></p>
+        <ul style={{ textAlign: 'left', maxWidth: '600px', margin: '0 auto' }}>
+          <li>コード分析と品質チェック</li>
+          <li>インタラクティブなチャット</li>
+          <li>オフライン対応</li>
+          <li>知識ベース連携</li>
+        </ul>
       </div>
+
+      <div style={{ 
+        marginTop: '2rem',
+        padding: '1rem',
+        backgroundColor: '#f0f9ff',
+        borderRadius: '8px',
+        border: '1px solid #0ea5e9'
+      }}>
+        <p><strong>🎯 試してみてください:</strong></p>
+        <p>右下のAIボタンをクリックして、「React コンポーネントを作成して」と入力してみてください！</p>
+      </div>
+
+      {/* AI Assistant */}
+      <AIAssistant />
     </div>
   )
 }

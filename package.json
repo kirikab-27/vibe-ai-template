@@ -1,7 +1,7 @@
 {
-  "name": "vibe-coding-template",
-  "version": "2.2.0",
-  "description": "AI開発テンプレート - Claude Code用のプロジェクトテンプレート",
+  "name": "vibe-ai-integrated-template",
+  "version": "1.0.0",
+  "description": "AI機能統合開発テンプレート - Claude Code SDKが組み込まれたプロジェクトテンプレート",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "framer-motion": "^11.0.0",
+    "lucide-react": "^0.400.0",
+    "react-hotkeys-hook": "^4.5.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",
@@ -26,5 +29,8 @@
     "eslint-plugin-react-refresh": "^0.4.6",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
+  },
+  "optionalDependencies": {
+    "@instantlyeasy/claude-code-sdk-ts": "^0.2.0"
   }
 }
