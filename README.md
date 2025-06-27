@@ -1,5 +1,227 @@
 # 🤖 Vibe AI Integrated Template
 
+🚀 **Claude Code SDK統合済み**の次世代開発テンプレート  
+ブラウザUIから直接Claude AIを活用できる統合開発環境
+
+## ✨ 特徴
+
+### 🤖 Claude Code SDK統合
+- **ブラウザUIから直接Claude AI利用可能**
+- `claude login`での認証システム
+- ファイル操作・コード分析・生成機能
+- プロジェクト全体のAI分析
+
+### 🎯 統合開発体験
+- **`npm run dev`一発でAI機能付きアプリ起動**
+- WebUI + Express.js APIサーバー構成
+- どんなアプリにもAI機能を簡単追加
+- 開発フローの分断なし
+
+### 🔧 AI機能
+- 💬 リアルタイムチャット
+- 📝 コード分析・生成
+- 📁 ファイル操作自動化
+- 🔍 プロジェクト構造分析
+- ⚡ ホットキーサポート
+
+## 🚀 クイックスタート
+
+### 1. 前提条件
+```bash
+# Node.js 18以上
+node --version
+
+# Claude CLI インストール
+npm install -g @anthropic-ai/claude-code
+
+# Claude認証（Claude Proアカウント）
+claude login
+```
+
+### 2. プロジェクト作成
+```bash
+# テンプレートをコピー
+cp -r vibe-ai-integrated-template my-app
+cd my-app
+
+# 依存関係インストール
+npm install
+```
+
+### 3. AI機能付きアプリ起動
+```bash
+# AIサーバー + WebUIを同時起動
+npm run dev
+```
+
+**🎉 完成！** ブラウザで `http://localhost:5173` にアクセス
+
+## 🛠️ 開発構成
+
+### サーバー構成
+- **Express.js APIサーバー** (localhost:3001)
+- **Vite開発サーバー** (localhost:5173)
+- **Claude Code SDK統合**
+
+### API エンドポイント
+```
+GET  /api/health              # ヘルスチェック
+POST /api/ai/chat             # AIチャット
+POST /api/ai/file-operation   # ファイル操作
+POST /api/ai/analyze-project  # プロジェクト分析
+POST /api/ai/generate-code    # コード生成
+```
+
+## 💡 使用例
+
+### アプリ固有のAI機能追加
+
+**ToDoアプリにAI機能を追加する例：**
+
+```typescript
+// components/TodoAI.tsx
+const TodoAI = () => {
+  const generateTasks = async (goal: string) => {
+    const response = await fetch('/api/ai/generate-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `"${goal}"を達成するためのタスクリストを生成`,
+        fileType: 'json'
+      })
+    });
+    
+    const data = await response.json();
+    return JSON.parse(data.code);
+  };
+
+  return (
+    <button onClick={() => generateTasks("健康的な生活")}>
+      AIでタスク生成
+    </button>
+  );
+};
+```
+
+### ファイル操作自動化
+```typescript
+// ファイル分析
+const analyzeFile = async (filePath: string) => {
+  const response = await fetch('/api/ai/file-operation', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      operation: 'analyze',
+      filePath
+    })
+  });
+  
+  return await response.text();
+};
+```
+
+## 🔧 カスタマイズ
+
+### AI設定変更
+```typescript
+// src/services/claudeApiService.ts
+const customConfig: ClaudeConfig = {
+  serverUrl: 'http://localhost:3001',
+  model: 'opus', // sonnet, opus, haiku
+  timeout: 60000 // 60秒
+};
+```
+
+### 新しいAI機能追加
+```typescript
+// server/index.ts に新エンドポイント追加
+app.post('/api/ai/custom-feature', async (req, res) => {
+  const { input } = req.body;
+  
+  const result = await claude()
+    .allowTools('Read', 'Write')
+    .query(`カスタム処理: ${input}`)
+    .asResult();
+    
+  res.json({ result });
+});
+```
+
+## 🎯 テンプレート活用例
+
+### 1. Wordのようなエディタアプリ
+```typescript
+// 文書校正機能
+const proofread = async (text: string) => {
+  const response = await fetch('/api/ai/chat', {
+    method: 'POST',
+    body: JSON.stringify({
+      message: `この文章を校正してください: "${text}"`
+    })
+  });
+  
+  return await response.json();
+};
+```
+
+### 2. データ分析アプリ
+```typescript
+// CSVファイル分析
+const analyzeData = async (csvPath: string) => {
+  const response = await fetch('/api/ai/analyze-project', {
+    method: 'POST',
+    body: JSON.stringify({
+      query: `${csvPath}のデータを分析して洞察を提供`
+    })
+  });
+  
+  return await response.json();
+};
+```
+
+## 🐛 トラブルシューティング
+
+### Claude CLI関連
+```bash
+# Claude CLIが見つからない場合
+npm install -g @anthropic-ai/claude-code
+
+# 認証エラーの場合
+claude login
+
+# Claude CLIの状態確認
+claude --version
+```
+
+### サーバー関連
+```bash
+# ポート競合の場合
+PORT=3002 npm run dev:server
+
+# 依存関係の問題
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 📚 詳細ドキュメント
+
+- [Claude Code SDK](https://github.com/instantlyeasy/claude-code-sdk-ts)
+- [API仕様書](./docs/API.md)
+- [カスタマイズガイド](./docs/CUSTOMIZATION.md)
+
+## 🎉 次のステップ
+
+1. **アプリのアイデアを実装**
+2. **AI機能をカスタマイズ**
+3. **ユーザー体験を向上**
+4. **プロダクションデプロイ**
+
+---
+
+**🚀 Claude Code SDKの力で、あらゆるアプリにAI機能を！**
+
+# 🤖 Vibe AI Integrated Template
+
 ![Development Status](https://img.shields.io/badge/Status-Phase%203%20Development-blue)
 ![React](https://img.shields.io/badge/React-18.2.0-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)

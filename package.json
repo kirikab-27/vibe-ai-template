@@ -4,7 +4,9 @@
   "description": "AI機能統合開発テンプレート - Claude Code SDKが組み込まれたプロジェクトテンプレート",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/index.ts",
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -12,7 +14,9 @@
     "new-project": "bash scripts/new-project.sh"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.55.0",
+    "@instantlyeasy/claude-code-sdk-ts": "^0.2.0",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.400.0",
     "react": "^18.2.0",
@@ -20,18 +24,20 @@
     "react-hotkeys-hook": "^4.5.0"
   },
   "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.11.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "concurrently": "^8.2.2",
+    "tsx": "^4.7.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.6",
     "typescript": "^5.2.2",
     "vite": "^5.2.0"
-  },
-  "optionalDependencies": {
-    "@instantlyeasy/claude-code-sdk-ts": "^0.2.0"
   }
 }

@@ -13,7 +13,7 @@ export interface AIAnalysisResult {
   suggestions: string[];
   explanation?: string;
   confidence: number;
-  source: 'claude' | 'local_knowledge' | 'fallback';
+  source: 'claude' | 'claude-code-sdk' | 'local_knowledge' | 'fallback';
   timestamp: number;
 }
 
