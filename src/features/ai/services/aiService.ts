@@ -39,7 +39,7 @@ class AIService {
 
   private async checkClaudeConnection(): Promise<void> {
     try {
-      if (claudeApiService.isConfigured()) {
+      if (await claudeApiService.isConfigured()) {
         const isHealthy = await claudeApiService.healthCheck();
         this.status.isOnline = isHealthy;
         
@@ -80,7 +80,7 @@ class AIService {
       const fullContext = context ? `${context}\n\n${projectContext}` : projectContext;
 
       // Claude APIを優先使用
-      if (claudeApiService.isConfigured()) {
+      if (await claudeApiService.isConfigured()) {
         const result = await claudeApiService.analyzeCode(code, fullContext);
         if (result) {
           this.status.successCount++;
@@ -109,7 +109,7 @@ class AIService {
       const projectContext = await this.getProjectContext();
       
       // Claude APIを優先使用
-      if (claudeApiService.isConfigured()) {
+      if (await claudeApiService.isConfigured()) {
         const response = await claudeApiService.chat(message, projectContext);
         if (response) {
           this.status.successCount++;

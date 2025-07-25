@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+// import { motion } from 'framer-motion';
 import { 
   Key, 
   Eye, 
@@ -10,8 +10,8 @@ import {
   Settings,
   Info
 } from 'lucide-react';
-import { claudeApiService } from '../../services/claudeApiService';
-import { aiService } from '../../services/aiService';
+import { claudeApiService } from '../services/claudeApiService';
+import { aiService } from '../services/aiService';
 
 const ApiConfiguration: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
@@ -31,8 +31,11 @@ const ApiConfiguration: React.FC = () => {
 
   useEffect(() => {
     // 初期状態の確認
-    const configured = claudeApiService.isConfigured();
-    setIsConfigured(configured);
+    const checkConfigured = async () => {
+      const configured = await claudeApiService.isConfigured();
+      setIsConfigured(configured);
+    };
+    checkConfigured();
     
     // 保存されたAPIキーの取得
     const storedKey = localStorage.getItem('claude-api-key');

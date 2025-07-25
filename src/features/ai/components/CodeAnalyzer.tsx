@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Play, AlertTriangle, Lightbulb, CheckCircle, Loader } from 'lucide-react';
-import { useAIService } from '../../hooks/ai/useAIService';
-import type { AIAnalysisResult } from '../../types/ai';
+import { useAIService } from '../hooks/useAIService';
+import type { AIAnalysisResult } from '../types/ai';
 
 interface CodeAnalyzerProps {
   isOnline: boolean;
@@ -127,7 +127,7 @@ export function CodeAnalyzer({ isOnline: _ }: CodeAnalyzerProps) {
                 潜在的な問題 ({result.potentialIssues.length})
               </h4>
               <div className="space-y-2">
-                {result.potentialIssues.map((issue, index) => (
+                {result.potentialIssues.map((issue: any, index: number) => (
                   <div key={index} className="p-3 bg-red-50 border-l-4 border-red-500 rounded">
                     <p className="text-red-800 text-sm">{issue}</p>
                   </div>
@@ -144,7 +144,7 @@ export function CodeAnalyzer({ isOnline: _ }: CodeAnalyzerProps) {
                 改善提案 ({result.suggestions.length})
               </h4>
               <div className="space-y-2">
-                {result.suggestions.map((suggestion, index) => (
+                {result.suggestions.map((suggestion: any, index: number) => (
                   <div key={index} className="p-3 bg-yellow-50 border-l-4 border-yellow-500 rounded">
                     <p className="text-yellow-800 text-sm">{suggestion}</p>
                   </div>

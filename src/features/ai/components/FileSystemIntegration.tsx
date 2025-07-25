@@ -10,8 +10,8 @@ import {
   CheckCircle,
   RefreshCw
 } from 'lucide-react';
-import { fileSystemService } from '../../services/fileSystemService';
-import type { ProjectFile, FileChangeEvent } from '../../services/fileSystemService';
+import { fileSystemService } from '../services/fileSystemService';
+import type { ProjectFile, FileChangeEvent } from '../services/fileSystemService';
 
 const FileSystemIntegration: React.FC = () => {
   const [isConnected, setIsConnected] = useState(false);
