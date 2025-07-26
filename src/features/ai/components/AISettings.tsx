@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Save, RotateCcw, Info } from 'lucide-react';
-import { useAIService } from '../../hooks/ai/useAIService';
-import type { AISettings as AISettingsType } from '../../types/ai';
+import { useAIService } from '../hooks/useAIService';
+import type { AISettings as AISettingsType } from '../types/ai';
 
 // ローカルストレージのキー
 const SETTINGS_KEY = 'ai-assistant-settings';
@@ -43,7 +43,7 @@ export function AISettings() {
   }, [settings]);
 
   const handleChange = (key: keyof AISettingsType, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+    setSettings((prev: any) => ({ ...prev, [key]: value }));
   };
 
   const handleSave = () => {

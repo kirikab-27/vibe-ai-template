@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Clock, ArrowRight, Lightbulb, Star } from 'lucide-react';
-import { knowledgeService, type SearchResult, type KnowledgeEntry, type ContextualSuggestion } from '../../services/knowledgeService';
-import { useFileContext } from '../../hooks/ai/useFileContext';
+import { knowledgeService, type SearchResult, type KnowledgeEntry, type ContextualSuggestion } from '../services/knowledgeService';
+import { useFileContext } from '../hooks/useFileContext';
 
 interface KnowledgeBaseProps {
   isOnline: boolean;
@@ -104,7 +104,7 @@ export function KnowledgeBase({ isOnline: _ }: KnowledgeBaseProps) {
                 <span className="text-lg">{getCategoryIcon(selectedEntry.category)}</span>
                 <span className="text-xs text-gray-500 capitalize">{selectedEntry.category}</span>
                 <div className="flex gap-1">
-                  {selectedEntry.tags.map((tag, index) => (
+                  {selectedEntry.tags.map((tag: any, index: number) => (
                     <span key={index} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
                       {tag}
                     </span>
@@ -128,7 +128,7 @@ export function KnowledgeBase({ isOnline: _ }: KnowledgeBaseProps) {
               <div className="mt-6 pt-4 border-t">
                 <h4 className="font-medium text-gray-900 mb-3">関連する知識</h4>
                 <div className="space-y-2">
-                  {knowledgeService.getRelatedEntries(selectedEntry.id).map((entry, index) => (
+                  {knowledgeService.getRelatedEntries(selectedEntry.id).map((entry: any, index: number) => (
                     <button
                       key={index}
                       onClick={() => setSelectedEntry(entry)}
@@ -238,7 +238,7 @@ export function KnowledgeBase({ isOnline: _ }: KnowledgeBaseProps) {
                 /* 全エントリー */
                 <div className="p-4">
                   <div className="space-y-3">
-                    {filteredEntries.map((entry, index) => (
+                    {filteredEntries.map((entry: any, index: number) => (
                       <motion.button
                         key={entry.id}
                         initial={{ opacity: 0, y: 10 }}

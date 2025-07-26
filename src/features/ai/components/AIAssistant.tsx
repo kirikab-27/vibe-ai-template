@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AIFloatingButton } from './AIFloatingButton';
 import AIPanel from './AIPanel';
-import { useAIService } from '../../hooks/ai/useAIService';
+import { useAIService } from '../hooks/useAIService';
 
 export function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,12 +12,12 @@ export function AIAssistant() {
     setIsOpen(!isOpen);
   };
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    if (!isOpen) {
-      setIsOpen(true);
-    }
-  };
+  // const handleTabChange = (tab: string) => {
+  //   setActiveTab(tab);
+  //   if (!isOpen) {
+  //     setIsOpen(true);
+  //   }
+  // };
 
   // Phase 3: ホットキー対応は一時的にコメントアウト
   /*

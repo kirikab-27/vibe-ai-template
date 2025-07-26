@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AIAssistant } from './components/ai/AIAssistant'
+import { AIAssistant } from './features/ai/components/AIAssistant'
 
 function App() {
   const [count, setCount] = useState(0)

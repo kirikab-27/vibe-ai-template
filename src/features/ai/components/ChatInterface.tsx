@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Send, User, Bot, Sparkles } from 'lucide-react';
-import { useAIService } from '../../hooks/ai/useAIService';
-import type { ChatMessage } from '../../types/ai';
+import { useAIService } from '../hooks/useAIService';
+import type { ChatMessage } from '../types/ai';
 
 interface ChatInterfaceProps {
   isOnline: boolean;

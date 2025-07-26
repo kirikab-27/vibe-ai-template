@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import { aiService } from '../../services/aiService';
-import type { AIAnalysisResult, AIServiceStatus } from '../../types/ai';
+import { aiService } from '../services/aiService';
+import type { AIAnalysisResult, AIServiceStatus } from '../types/ai';
 
 export interface UseAIServiceOptions {
   autoHealthCheck?: boolean;

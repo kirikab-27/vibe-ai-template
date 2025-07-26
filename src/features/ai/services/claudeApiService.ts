@@ -63,6 +63,28 @@ class ClaudeApiService {
     return await this.healthCheck();
   }
 
+  // APIキーの設定（このサービスではサーバー経由なので常にtrueを返す）
+  setApiKey(apiKey: string): boolean {
+    // サーバー経由の場合、APIキーはサーバー側で管理されるため、常にtrueを返す
+    localStorage.setItem('claude-api-key', apiKey);
+    return true;
+  }
+
+  // 使用統計の取得
+  getUsageStats() {
+    return {
+      requestCount: this.rateLimitTracker.requestCount,
+      resetTime: this.rateLimitTracker.resetTime,
+      isConfigured: !!localStorage.getItem('claude-api-key'),
+      model: this.config.model
+    };
+  }
+
+  // 設定の更新
+  updateConfig(config: Partial<ClaudeConfig>) {
+    this.config = { ...this.config, ...config };
+  }
+
   // レート制限チェック
   private checkRateLimit(): boolean {
     const now = Date.now();
